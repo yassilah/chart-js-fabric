@@ -1,6 +1,6 @@
 import fabricJS, { fabric } from 'fabric'
 import Chart, { ChartConfiguration, ChartSize } from 'chart.js'
-import { merge } from 'lodash'
+import { debounce, merge } from 'lodash'
 
 const CHART_OPTIONS = 'chart'
 const CHART_INSTANCE = '__chart'
@@ -46,7 +46,6 @@ export class ChartObject extends fabricObject {
    */
   public _set(key: string, value: any) {
     if (key === CHART_OPTIONS) {
-      console.log(key, value, this[CHART_OPTIONS])
       return this.__setChartConfiguration(value)
     }
 
@@ -211,11 +210,10 @@ export class ChartObject extends fabricObject {
           )
 
           if (this.flipX) {
-            x -= this.getScaledWidth()
+            x = this.getScaledWidth() - x
           }
-
           if (this.flipY) {
-            y -= this.getScaledHeight()
+            y = this.getScaledHeight() - y
           }
 
           this[CHART_INSTANCE].canvas!.dispatchEvent(
@@ -252,7 +250,7 @@ export class ChartObject extends fabricObject {
     super.initialize(options)
     this.__createChart()
     this.__bindChartEvents()
-    this.on('scaling', this.__setChartSize.bind(this))
+    this.on('scaling', debounce(this.__setChartSize.bind(this), 5))
 
     return this
   }
