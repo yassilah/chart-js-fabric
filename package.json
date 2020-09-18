@@ -127,7 +127,6 @@
     "chart.js": "^2.9.3",
     "fabric": "^4.1.0",
     "lodash.debounce": "^4.0.8",
-    "lodash.merge": "^4.6.2",
-    "rollup-plugin-babel": "^4.4.0"
+    "lodash.merge": "^4.6.2"
   }
 }
