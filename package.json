@@ -1,6 +1,6 @@
 {
   "name": "chart-js-fabric",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "keywords": [],
   "main": "dist/chart-js-fabric.umd.js",
@@ -33,7 +33,6 @@
     "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
     "precommit": "lint-staged",
     "travis-deploy-once": "travis-deploy-once",
-    "prepush": "npm run test:prod && npm run build",
     "commitmsg": "commitlint -E HUSKY_GIT_PARAMS"
   },
   "lint-staged": {
