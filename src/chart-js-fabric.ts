@@ -84,7 +84,7 @@ export class ChartObject extends fabricObject {
    * @return {Object} Object representation of an instance
    */
   public toObject(propertiesToInclude: string[] = []) {
-    return super.toObject(propertiesToInclude.concat('ChartConfiguration'))
+    return super.toObject(propertiesToInclude.concat(CHART_OPTIONS))
   }
 
   /**
@@ -94,8 +94,8 @@ export class ChartObject extends fabricObject {
    */
   private __setChartSize() {
     const canvas = this[CHART_INSTANCE].canvas!
-    canvas.width = this.width! * this.scaleX! * window.devicePixelRatio
-    canvas.height = this.height! * this.scaleY! * window.devicePixelRatio
+    canvas.width = this.width! * this.scaleX! * (window?.devicePixelRatio || 1)
+    canvas.height = this.height! * this.scaleY! * (window?.devicePixelRatio || 1)
     this[CHART_INSTANCE].resize()
   }
 
@@ -204,11 +204,19 @@ export class ChartObject extends fabricObject {
       const event = name as keyof typeof CHART_EVENTS
       this.on(event, e => {
         if (this.canvas && this[CHART_INSTANCE].canvas) {
-          const { x, y } = this.toLocalPoint(
+          let { x, y } = this.toLocalPoint(
             this.canvas.getPointer(e.e) as fabric.Point,
             'left',
             'top'
           )
+
+          if (this.flipX) {
+            x -= this.getScaledWidth()
+          }
+
+          if (this.flipY) {
+            y -= this.getScaledHeight()
+          }
 
           this[CHART_INSTANCE].canvas!.dispatchEvent(
             new MouseEvent(CHART_EVENTS[event], {

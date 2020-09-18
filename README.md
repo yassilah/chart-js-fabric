@@ -12,7 +12,7 @@ yarn add chart-js-fabric
 
 # Usage
 
-You can use the regular API from both those great libraries as you would normally. Each fabric.Chart object has an extra "chart" propeprty when you can set your chart.js options (see below).
+You can use the regular API from both those great libraries as you would normally. Each fabric.Chart object has an extra "chart" propeprty where you can set your chart.js options (see below).
 
 ```js
 import { fabric } from 'fabric'
