@@ -38,20 +38,12 @@ export default {
       file: pkg.module,
       format: 'es',
       sourcemap: true,
-      globals: {
-        fabric: 'fabric',
-        'chart.js': 'Chart'
-      },
       plugins: [terser()]
     },
     {
       file: pkg.module.replace(/\.js$/, '.min.js'),
       format: 'es',
       sourcemap: true,
-      globals: {
-        fabric: 'fabric',
-        'chart.js': 'Chart'
-      },
       plugins: [terser()]
     }
   ],
