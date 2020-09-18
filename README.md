@@ -59,3 +59,19 @@ object.set({ chart: { data: [2] })
 //     }
 //   }
 ```
+
+You may add global Chart.js plugins using the utility method "addPlugin".
+```js
+fabric.util.chart.addPlugin(YourPlugin)
+```
+
+You may also change the global default Chart.js options using the utility method "setDefaults". Your new options will be merged with the existing ones.
+```js
+fabric.util.chart.setDefaults({
+  options: {
+    onClick() {
+      alert('You clicked!')
+    }
+  }
+ })
+```

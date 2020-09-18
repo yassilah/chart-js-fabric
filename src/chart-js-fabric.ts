@@ -1,19 +1,29 @@
 import fabricJS, { fabric } from 'fabric'
-import Chart, { ChartConfiguration, ChartSize } from 'chart.js'
-import { debounce, merge } from 'lodash'
+import Chart, { ChartConfiguration, ChartSize, PluginServiceRegistrationOptions } from 'chart.js'
+import debounce from 'lodash.debounce'
+import merge from 'lodash.merge'
+
+const _fabric = (fabricJS as any) as typeof fabric
 
 const CHART_OPTIONS = 'chart'
 const CHART_INSTANCE = '__chart'
+const CHART_PLUGINS: PluginServiceRegistrationOptions[] = []
+const CHART_DEFAULT_OPTIONS: ChartConfiguration = {
+  plugins: CHART_PLUGINS,
+  options: {
+    responsive: false,
+    maintainAspectRatio: false,
+  },
+}
 const CHART_EVENTS = {
   mousemove: 'mousemove',
   mousedown: 'click',
   mouseout: 'mouseout',
   touchstart: 'touchstart',
-  touchmove: 'touchmove'
+  touchmove: 'touchmove',
 }
-const fabricObject = ((fabricJS as any) as typeof fabric).Object
 
-export class ChartObject extends fabricObject {
+export class ChartObject extends _fabric.Object {
   /**
    * Type of an object (rect, circle, path, etc.).
    * Note that this property is meant to be read-only and not meant to be modified.
@@ -93,8 +103,8 @@ export class ChartObject extends fabricObject {
    */
   private __setChartSize() {
     const canvas = this[CHART_INSTANCE].canvas!
-    canvas.width = this.width! * this.scaleX! * (window?.devicePixelRatio || 1)
-    canvas.height = this.height! * this.scaleY! * (window?.devicePixelRatio || 1)
+    canvas.width = this.getScaledWidth() * (window?.devicePixelRatio || 1)
+    canvas.height = this.getScaledHeight() * (window?.devicePixelRatio || 1)
     this[CHART_INSTANCE].resize()
   }
 
@@ -104,28 +114,30 @@ export class ChartObject extends fabricObject {
    * @return {Object}
    */
   private __defaultChartConfiguration() {
-    return {
-      plugins: [],
+    return merge({}, CHART_DEFAULT_OPTIONS, {
       options: {
-        responsive: false,
-        maintainAspectRatio: false,
         onResize: (newSize: ChartSize) => {
+          CHART_DEFAULT_OPTIONS.options?.onResize?.call(this[CHART_INSTANCE], newSize)
           this[CHART_OPTIONS].options?.onResize?.call(this[CHART_INSTANCE], newSize)
           this.dirty = true
           this.canvas?.requestRenderAll()
         },
         animation: {
           onProgress: () => {
+            CHART_DEFAULT_OPTIONS.options?.animation?.onProgress?.call(
+              this[CHART_INSTANCE],
+              this[CHART_INSTANCE]
+            )
             this[CHART_OPTIONS].options?.animation?.onProgress?.call(
               this[CHART_INSTANCE],
               this[CHART_INSTANCE]
             )
             this.dirty = true
             this.canvas?.requestRenderAll()
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    })
   }
 
   /**
@@ -144,7 +156,7 @@ export class ChartObject extends fabricObject {
       top: this.top,
       width: this.getScaledWidth(),
       x: this.left! + this.getScaledWidth() / 2,
-      y: this.top! + this.getScaledHeight() / 2
+      y: this.top! + this.getScaledHeight() / 2,
     } as DOMRect
   }
 
@@ -159,7 +171,7 @@ export class ChartObject extends fabricObject {
       'padding-left': 0,
       'padding-right': 0,
       'padding-top': 0,
-      'padding-bottom': 0
+      'padding-bottom': 0,
     } as Partial<CSSStyleDeclaration>
   }
 
@@ -170,23 +182,23 @@ export class ChartObject extends fabricObject {
    */
   private __createChartCanvas() {
     const canvas = document.createElement('canvas')
-    canvas.width = this.width! * this.scaleX!
-    canvas.height = this.height! * this.scaleY!
+    canvas.width = this.getScaledWidth()
+    canvas.height = this.getScaledHeight()
 
     Object.defineProperty(canvas, 'clientWidth', {
-      get: () => canvas.width / window.devicePixelRatio
+      get: () => canvas.width / window.devicePixelRatio,
     })
 
     Object.defineProperty(canvas, 'clientHeight', {
-      get: () => canvas.height / window.devicePixelRatio
+      get: () => canvas.height / window.devicePixelRatio,
     })
 
     Object.defineProperty(canvas, 'getBoundingClientRect', {
-      value: this.__getChartBoundingClientRect.bind(this)
+      value: this.__getChartBoundingClientRect.bind(this),
     })
 
     Object.defineProperty(canvas, 'currentStyle', {
-      value: this.__getChartCurrentStyle()
+      value: this.__getChartCurrentStyle(),
     })
 
     return canvas
@@ -201,7 +213,7 @@ export class ChartObject extends fabricObject {
   private __bindChartEvents() {
     for (const name in CHART_EVENTS) {
       const event = name as keyof typeof CHART_EVENTS
-      this.on(event, e => {
+      this.on(event, (e) => {
         if (this.canvas && this[CHART_INSTANCE].canvas) {
           let { x, y } = this.toLocalPoint(
             this.canvas.getPointer(e.e) as fabric.Point,
@@ -219,7 +231,7 @@ export class ChartObject extends fabricObject {
           this[CHART_INSTANCE].canvas!.dispatchEvent(
             new MouseEvent(CHART_EVENTS[event], {
               clientX: this.left! + x,
-              clientY: this.top! + y
+              clientY: this.top! + y,
             })
           )
         }
@@ -292,11 +304,40 @@ declare module 'fabric' {
     interface IChartConfiguration extends IObjectOptions {
       [CHART_OPTIONS]: ChartConfiguration
     }
+    interface IUtil {
+      chart: {
+        addPlugins(...plugins: any[]): void
+        setDefaults(options: Partial<ChartConfiguration>): void
+      }
+    }
   }
 }
 
-const klass = (fabricJS as any).util.createClass(ChartObject)
+const klass = _fabric.util.createClass(ChartObject)
+
 klass.type = 'chart'
-Object.defineProperty(fabricJS, 'Chart', {
-  value: klass
+
+Object.defineProperty(_fabric, 'Chart', {
+  value: klass,
+})
+
+_fabric.util.object.extend(_fabric.util, {
+  chart: {
+    /**
+     * Add plugins to the list of default plugins.
+     *
+     * @param plugin
+     */
+    addPlugins(...plugins: any[]) {
+      CHART_PLUGINS.push(...plugins)
+    },
+    /**
+     * Set the default global options.
+     *
+     * @param options
+     */
+    setDefaults(options: Partial<ChartConfiguration>) {
+      merge(CHART_DEFAULT_OPTIONS, options)
+    },
+  },
 })

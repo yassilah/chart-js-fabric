@@ -4,6 +4,7 @@ import sourceMaps from 'rollup-plugin-sourcemaps'
 import camelCase from 'lodash.camelcase'
 import typescript from 'rollup-plugin-typescript2'
 import json from 'rollup-plugin-json'
+import { terser } from 'rollup-plugin-terser'
 
 const pkg = require('./package.json')
 
@@ -18,25 +19,45 @@ export default {
       format: 'umd',
       sourcemap: true,
       globals: {
-        lodash: '_',
         fabric: 'fabric',
         'chart.js': 'Chart'
       }
+    },
+    {
+      file: pkg.main.replace(/\.js$/, '.min.js'),
+      name: camelCase(libraryName),
+      format: 'umd',
+      sourcemap: true,
+      globals: {
+        fabric: 'fabric',
+        'chart.js': 'Chart'
+      },
+      plugins: [terser()]
     },
     {
       file: pkg.module,
       format: 'es',
       sourcemap: true,
       globals: {
-        lodash: '_',
         fabric: 'fabric',
         'chart.js': 'Chart'
-      }
+      },
+      plugins: [terser()]
+    },
+    {
+      file: pkg.module.replace(/\.js$/, '.min.js'),
+      format: 'es',
+      sourcemap: true,
+      globals: {
+        fabric: 'fabric',
+        'chart.js': 'Chart'
+      },
+      plugins: [terser()]
     }
   ],
 
   // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
-  external: ['lodash', 'fabric', 'chart.js'],
+  external: ['fabric', 'chart.js'],
   watch: {
     include: 'src/**'
   },
