@@ -2,6 +2,7 @@ import fabricJS, { fabric as fabricTS } from 'fabric'
 import Chart, { ChartConfiguration, ChartSize, PluginServiceRegistrationOptions } from 'chart.js'
 import debounce from 'lodash.debounce'
 import merge from 'lodash.merge'
+import { IChartConfiguration } from 'fabric/fabric-impl'
 
 const fabric = ('fabric' in fabricJS ? fabricJS.fabric : (fabricJS as any)) as typeof fabricTS
 const CHART_OPTIONS = 'chart'
@@ -30,7 +31,7 @@ export class ChartObject extends fabric.Object {
    * @type {String}
    * @default
    */
-  public type: string = 'chart'
+  public static type: string = 'chart'
 
   /**
    * List of options to pass into the chart.js instance.
@@ -292,6 +293,16 @@ export class ChartObject extends fabric.Object {
       )
     }
   }
+
+  /**
+   * From object.
+   *
+   * @param object
+   * @param callback
+   */
+  public static fromObject(object: IChartConfiguration, callback: Function) {
+    return callback && callback(new fabric.Chart(object))
+  }
 }
 
 declare module 'fabric' {
@@ -318,6 +329,8 @@ declare module 'fabric' {
  */
 export function install(fabric: typeof fabricTS) {
   fabric.Chart = fabric.util.createClass(ChartObject)
+  fabric.Chart.type = ChartObject.type
+  fabric.Chart.fromObject = ChartObject.fromObject
 
   fabric.util.object.extend(fabric.util, {
     chart: {
