@@ -14,8 +14,19 @@ yarn add chart-js-fabric
 
 You can use the regular API from both those great libraries as you would normally. Each fabric.Chart object has an extra "chart" propeprty where you can set your chart.js options (see below).
 
+If using a custom fabric instance, please use the export "install" method.
+
 ```js
 import { fabric } from 'fabric'
+import { install } from 'chart-js-fabric'
+
+install(fabric)
+```
+
+Else, simply import the plugin.
+
+```js
+import fabric from 'fabric'
 import 'chart-js-fabric'
 
 const instance = new fabric.Canvas('#canvas')
@@ -61,11 +72,13 @@ object.set({ chart: { data: [2] })
 ```
 
 You may add global Chart.js plugins using the utility method "addPlugin".
+
 ```js
 fabric.util.chart.addPlugin(YourPlugin)
 ```
 
 You may also change the global default Chart.js options using the utility method "setDefaults". Your new options will be merged with the existing ones.
+
 ```js
 fabric.util.chart.setDefaults({
   options: {
@@ -73,5 +86,5 @@ fabric.util.chart.setDefaults({
       alert('You clicked!')
     }
   }
- })
+})
 ```

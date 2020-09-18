@@ -1,10 +1,9 @@
-import fabricJS, { fabric } from 'fabric'
+import fabricJS, { fabric as fabricTS } from 'fabric'
 import Chart, { ChartConfiguration, ChartSize, PluginServiceRegistrationOptions } from 'chart.js'
 import debounce from 'lodash.debounce'
 import merge from 'lodash.merge'
 
-const _fabric = (fabricJS as any) as typeof fabric
-
+const fabric = ('fabric' in fabricJS ? fabricJS.fabric : (fabricJS as any)) as typeof fabricTS
 const CHART_OPTIONS = 'chart'
 const CHART_INSTANCE = '__chart'
 const CHART_PLUGINS: PluginServiceRegistrationOptions[] = []
@@ -22,8 +21,7 @@ const CHART_EVENTS = {
   touchstart: 'touchstart',
   touchmove: 'touchmove',
 }
-
-export class ChartObject extends _fabric.Object {
+export class ChartObject extends fabric.Object {
   /**
    * Type of an object (rect, circle, path, etc.).
    * Note that this property is meant to be read-only and not meant to be modified.
@@ -258,7 +256,7 @@ export class ChartObject extends _fabric.Object {
    * @param {fabric.IChartConfiguration} options
    * @return {fabric.Chart}
    */
-  public initialize(options?: fabric.IChartConfiguration) {
+  public initialize(options?: fabricTS.IChartConfiguration) {
     super.initialize(options)
     this.__createChart()
     this.__bindChartEvents()
@@ -313,31 +311,34 @@ declare module 'fabric' {
   }
 }
 
-const klass = _fabric.util.createClass(ChartObject)
+/**
+ * Install the plugin on a given fabric instance.
+ *
+ * @param fabric
+ */
+export function install(fabric: typeof fabricTS) {
+  fabric.Chart = fabric.util.createClass(ChartObject)
 
-klass.type = 'chart'
-
-Object.defineProperty(_fabric, 'Chart', {
-  value: klass,
-})
-
-_fabric.util.object.extend(_fabric.util, {
-  chart: {
-    /**
-     * Add plugins to the list of default plugins.
-     *
-     * @param plugin
-     */
-    addPlugins(...plugins: any[]) {
-      CHART_PLUGINS.push(...plugins)
+  fabric.util.object.extend(fabric.util, {
+    chart: {
+      /**
+       * Add plugins to the list of default plugins.
+       *
+       * @param plugin
+       */
+      addPlugins(...plugins: any[]) {
+        CHART_PLUGINS.push(...plugins)
+      },
+      /**
+       * Set the default global options.
+       *
+       * @param options
+       */
+      setDefaults(options: Partial<ChartConfiguration>) {
+        merge(CHART_DEFAULT_OPTIONS, options)
+      },
     },
-    /**
-     * Set the default global options.
-     *
-     * @param options
-     */
-    setDefaults(options: Partial<ChartConfiguration>) {
-      merge(CHART_DEFAULT_OPTIONS, options)
-    },
-  },
-})
+  })
+}
+
+install(fabric)

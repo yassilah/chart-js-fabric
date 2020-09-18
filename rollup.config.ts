@@ -24,17 +24,6 @@ export default {
       }
     },
     {
-      file: pkg.main.replace(/\.js$/, '.min.js'),
-      name: camelCase(libraryName),
-      format: 'umd',
-      sourcemap: true,
-      globals: {
-        fabric: 'fabric',
-        'chart.js': 'Chart'
-      },
-      plugins: [terser()]
-    },
-    {
       file: pkg.module,
       format: 'es',
       sourcemap: true,
@@ -59,7 +48,9 @@ export default {
     // Compile TypeScript files
     typescript({ useTsconfigDeclarationDir: true }),
     // Allow bundling cjs modules (unlike webpack, rollup doesn't understand cjs)
-    commonjs(),
+    commonjs({
+      include: 'node_modules/**'
+    }),
     // Allow node_modules resolution, so you can use 'external' to control
     // which external modules to include in the bundle
     // https://github.com/rollup/rollup-plugin-node-resolve#usage
