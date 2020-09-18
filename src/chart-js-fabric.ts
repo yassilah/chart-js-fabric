@@ -1,5 +1,5 @@
-import { fabric } from 'fabric'
-import ChartJS, { ChartConfiguration, ChartSize } from 'chart.js'
+import fabricJS, { fabric } from 'fabric'
+import Chart, { ChartConfiguration, ChartSize } from 'chart.js'
 import { merge } from 'lodash'
 
 const CHART_OPTIONS = 'chart'
@@ -11,8 +11,9 @@ const CHART_EVENTS = {
   touchstart: 'touchstart',
   touchmove: 'touchmove'
 }
+const fabricObject = ((fabricJS as any) as typeof fabric).Object
 
-export class ChartObject extends fabric.Object {
+export class ChartObject extends fabricObject {
   /**
    * Type of an object (rect, circle, path, etc.).
    * Note that this property is meant to be read-only and not meant to be modified.
@@ -33,9 +34,9 @@ export class ChartObject extends fabric.Object {
   /**
    * The current chart instance.
    *
-   * @type {ChartJS}
+   * @type {Chart}
    */
-  private [CHART_INSTANCE]: ChartJS
+  private [CHART_INSTANCE]: Chart
 
   /**
    * Set the properties ofthe object.
@@ -43,12 +44,13 @@ export class ChartObject extends fabric.Object {
    * @param {string} key
    * @param {any} value
    */
-  public _set(key: string, value: any): ChartObject {
+  public _set(key: string, value: any) {
     if (key === CHART_OPTIONS) {
+      console.log(key, value, this[CHART_OPTIONS])
       return this.__setChartConfiguration(value)
     }
 
-    return this
+    return super._set(key, value)
   }
 
   /**
@@ -59,20 +61,14 @@ export class ChartObject extends fabric.Object {
   private __setChartConfiguration(options: Partial<ChartConfiguration>): ChartObject {
     const instance = this[CHART_INSTANCE]
 
-    if (instance) {
-      this[CHART_OPTIONS] = merge(
-        {},
-        this[CHART_OPTIONS],
-        options,
-        this.__defaultChartConfiguration()
-      )
+    this[CHART_OPTIONS] = merge({}, this[CHART_OPTIONS], options)
 
+    if (instance) {
       if (options.type && options.type !== instance.config.type) {
         instance.destroy()
         this.__createChart()
         return this
       }
-
       instance.data = this[CHART_OPTIONS].data || instance.data
       instance.options = this[CHART_OPTIONS].options || instance.options
       this.__chart.update()
@@ -208,11 +204,16 @@ export class ChartObject extends fabric.Object {
       const event = name as keyof typeof CHART_EVENTS
       this.on(event, e => {
         if (this.canvas && this[CHART_INSTANCE].canvas) {
-          const { x, y } = this.canvas.getPointer(e.e)
+          const { x, y } = this.toLocalPoint(
+            this.canvas.getPointer(e.e) as fabric.Point,
+            'left',
+            'top'
+          )
+
           this[CHART_INSTANCE].canvas!.dispatchEvent(
             new MouseEvent(CHART_EVENTS[event], {
-              clientX: x,
-              clientY: y
+              clientX: this.left! + x,
+              clientY: this.top! + y
             })
           )
         }
@@ -223,11 +224,13 @@ export class ChartObject extends fabric.Object {
   /**
    * Ccreate the chart instance.
    *
-   * @return {ChartJS}
+   * @return {Chart}
    */
   private __createChart() {
     const options = merge({}, this[CHART_OPTIONS], this.__defaultChartConfiguration())
-    this[CHART_INSTANCE] = new ChartJS(this.__createChartCanvas(), options)
+
+    this[CHART_INSTANCE] = new Chart(this.__createChartCanvas(), options)
+
     return this[CHART_INSTANCE]
   }
 
@@ -277,7 +280,7 @@ export class ChartObject extends fabric.Object {
 
 declare module 'fabric' {
   namespace fabric {
-    export class Chart extends ChartObject {
+    class Chart extends ChartObject {
       constructor(options?: IChartConfiguration)
     }
     interface IChartConfiguration extends IObjectOptions {
@@ -285,3 +288,9 @@ declare module 'fabric' {
     }
   }
 }
+
+const klass = (fabricJS as any).util.createClass(ChartObject)
+klass.type = 'chart'
+Object.defineProperty(fabricJS, 'Chart', {
+  value: klass
+})
