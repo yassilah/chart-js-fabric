@@ -1,6 +1,6 @@
 {
   "name": "chart-js-fabric",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "",
   "keywords": [],
   "main": "dist/chart-js-fabric.umd.js",
@@ -12,7 +12,7 @@
   "author": "yassipad <yasser.lahbibi@apenhet.com>",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git@github.com:yassipad/chart-js-fabric.git"
   },
   "license": "MIT",
   "engines": {
@@ -32,7 +32,9 @@
     "semantic-release": "semantic-release",
     "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
     "precommit": "lint-staged",
-    "travis-deploy-once": "travis-deploy-once"
+    "travis-deploy-once": "travis-deploy-once",
+    "prepush": "npm run test:prod && npm run build",
+    "commitmsg": "commitlint -E HUSKY_GIT_PARAMS"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": [
@@ -104,12 +106,11 @@
     "rimraf": "^2.6.2",
     "rollup": "^0.67.0",
     "rollup-plugin-commonjs": "^9.1.8",
-    "rollup-plugin-external-globals": "^0.6.0",
     "rollup-plugin-json": "^3.1.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-sourcemaps": "^0.4.2",
     "rollup-plugin-typescript2": "^0.18.0",
-    "semantic-release": "^15.9.16",
+    "semantic-release": "^17.1.2",
     "shelljs": "^0.8.3",
     "travis-deploy-once": "^5.0.9",
     "ts-jest": "^23.10.2",
@@ -117,10 +118,11 @@
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
     "tslint-config-standard": "^8.0.1",
-    "typedoc": "^0.12.0",
-    "typescript": "^3.0.3"
+    "typedoc": "^0.19.1",
+    "typescript": "^4.0.0"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.161",
     "chart.js": "^2.9.3",
     "fabric": "^4.1.0",
     "lodash": "^4.17.20"
