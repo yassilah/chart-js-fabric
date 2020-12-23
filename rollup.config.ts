@@ -1,10 +1,11 @@
-import resolve from 'rollup-plugin-node-resolve'
-import commonjs from 'rollup-plugin-commonjs'
+import resolve from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
 import sourceMaps from 'rollup-plugin-sourcemaps'
 import camelCase from 'lodash.camelcase'
 import typescript from 'rollup-plugin-typescript2'
-import json from 'rollup-plugin-json'
+import json from '@rollup/plugin-json'
 import { terser } from 'rollup-plugin-terser'
+import alias from '@rollup/plugin-alias';
 
 const pkg = require('./package.json')
 
@@ -27,7 +28,6 @@ export default {
       file: pkg.module,
       format: 'es',
       sourcemap: true,
-      plugins: [terser()]
     },
     {
       file: pkg.module.replace(/\.js$/, '.min.js'),
@@ -43,6 +43,11 @@ export default {
     include: 'src/**'
   },
   plugins: [
+    alias({
+      entries: [
+        { find: 'fabric', replacement: 'fabric-pure-browser' },
+      ]
+    }),
     // Allow json resolution
     json(),
     // Compile TypeScript files
