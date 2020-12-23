@@ -10,6 +10,7 @@
     "dist"
   ],
   "author": "yassipad <yasser.lahbibi@apenhet.com>",
+  "homepage": "https://github.com/yassipad/chart-js-fabric",
   "repository": {
     "type": "git",
     "url": "git@github.com:yassipad/chart-js-fabric.git"
